@@ -14,7 +14,7 @@ async function getSavedData(bubbleName) {
 
         const query = { bubblename: bubbleName };
 
-        const cursor = bubbles.find(query);
+        const cursor = await bubbles.find(query);
 
         result = await cursor.hasNext() ? cursor.next() : null;
         // console.log(result);
@@ -43,18 +43,17 @@ async function insertUser(user) {
 
 // 그림 저장
 async function insertData(data) {
-    // try {
-    //     await client.connect();
-    //     const database = client.db('scribubble');
-    //     const drawing = database.collection('drawing');
+    try {
+        await client.connect();
+        const database = client.db('scribubble');
+        const bubbles = database.collection('bubble');
 
-    //     const result = await drawing.insertOne(data);
-
-    //     console.log(result);
-    // } finally {
-    //     await client.close();
-    // }
+        await bubbles.insertOne(data);
+    } finally {
+        await client.close();
+    }
 }
+
 
 
 // 그림 수정
