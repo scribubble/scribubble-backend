@@ -48,7 +48,16 @@ async function insertData(data) {
         const database = client.db('scribubble');
         const bubbles = database.collection('bubble');
 
-        await bubbles.insertOne(data);
+        const query = { bubblename: data.bubblename };
+        const update = { $set: data};
+        const options = { /* upsert: true */ };
+        await bubbles.updateOne(query, update, options);
+
+        const cursor = await bubbles.find(query);
+        let result = await cursor.hasNext() ? cursor.next() : null;
+        // console.log(result);
+        return result;
+
     } finally {
         await client.close();
     }
