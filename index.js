@@ -44,10 +44,11 @@ io.on('connection', (socket) => {
     console.log('enter bubble');
 
     if (!loadedData[bubbleName]) {
-      getSavedData(bubbleName).then((data) => {
-        loadedData[bubbleName] = data;
-        console.log(`loadedData[${bubbleName}]: `, loadedData[bubbleName]);
-      });
+      // getSavedData(bubbleName).then((data) => {
+      //   loadedData[bubbleName] = data;
+      //   console.log(`loadedData[${bubbleName}]: `, loadedData[bubbleName]);
+      // });
+      loadedData[bubbleName] = require('./db/draw-data.json');
     }
 
     socket.emit('get saved bubble', loadedData[bubbleName]);
