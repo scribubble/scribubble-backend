@@ -13,14 +13,10 @@ const bubbleSchema = new mongoose.Schema({
         }],
         lineColor: String,
         lineWidth: Number,
+        lineDashed: Boolean,
         position: [ String ],
         scale: [ String ],
-        rotation: [ String ],
-        lineDash: [
-            {
-                width: Number
-            }
-        ]
+        rotation: [ String ]
     }],
     text: [ 
         { _id: Number, html: String, tagName: String }

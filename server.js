@@ -22,10 +22,10 @@ const initialLineData = (data) => {
     }],
     lineColor: data.color,
     lineWidth: data.linewidth,
+    lineDashed: data.dashed,
     position: [],
     scale: [],
     rotation: [],
-    lineDash: []
   }
 }
 
@@ -33,7 +33,7 @@ let loadedData = [];
 let tempLineData = [];
 
 io.on("connection", (socket) => {
-  console.log("CONNECT !!!!!");
+  console.log(`CONNECT !!!!! ${socket.id}`);
 
   // 접속하면 socketId를 저장하게함 io.to(socket.id)
   socket.emit("user_id", { user_id: socket.id });
@@ -75,7 +75,7 @@ io.on("connection", (socket) => {
       if(loadedData[param].visitor_id.includes(socket.id) === false) {
         loadedData[param].visitor_id.push(socket.id);
       }
-      
+
       socket.emit("get saved bubble", loadedData[param]);
     }
   });
