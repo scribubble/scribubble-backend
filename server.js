@@ -48,7 +48,10 @@ io.on("connection", (socket) => {
       Bubble.find({ bubbleName: param }) // DB에 있던 버블인 경우
         .then((result) => {
           loadedData[param] = result;
-          loadedData[param].visitor_id.push(socket.id);
+          
+          if(loadedData[param].visitor_id.includes(socket.id) === false) {
+            loadedData[param].visitor_id.push(socket.id);
+          }
           
           console.log(`get loadedData[${param}]: ${loadedData[param]}`);
 
@@ -69,6 +72,10 @@ io.on("connection", (socket) => {
     } else { // 버블이 메모리에 있는 경우
       console.log(`${param} is in memory`);
 
+      if(loadedData[param].visitor_id.includes(socket.id) === false) {
+        loadedData[param].visitor_id.push(socket.id);
+      }
+      
       socket.emit("get saved bubble", loadedData[param]);
     }
   });
