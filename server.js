@@ -24,9 +24,11 @@ const initialLineData = (data) => {
     lineWidth: data.linewidth,
     lineDashed: data.dashed,
     name: data.name,
-    position: [],
-    scale: [],
-    rotation: [],
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
   }
 }
 
@@ -120,17 +122,31 @@ io.on("connection", (socket) => {
       .then((savedBubble) => {
         console.log(`${data.bubbleName} is saved`);
         delete tempLineData[data.user_id];
+        io.emit("draw stop", data);
       })
       .catch((err) => {
         console.log(err);
       });
-
-    io.emit("draw stop", data);
   })
 
   socket.on("move obj", (data) => {
-    console.log(data);
-    io.emit("move obj", data);
+    console.log("move obj");
+
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, 
+      loadedData[data.bubbleName].line.map((line) => {
+        if(line.name === data.objName)
+          line.position.x = data.position.x;
+          line.position.y = data.position.y;
+          line.position.z = data.position.z;
+      }
+    ))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+      io.emit("move obj", data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   });
 
   socket.on("remove line", (data) => {
