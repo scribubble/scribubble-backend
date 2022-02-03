@@ -1,139 +1,180 @@
-const express = require('express');
-const { load } = require('nodemon/lib/config');
+const express = require("express");
 const app = express();
 
-const http = require('http').createServer(app);
+const http = require("http").createServer(app);
 
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000;
 
-const io = require('socket.io')(http, {
+const io = require("socket.io")(http, {
   cors: {
     origin: "*",
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
-const { getSavedData, insertData, updateData, deleteData } = require('./db/dbcon'); // mongodb connection
-
-let loadedData = {};
-let tempLine = []; /*
-let tempLine = {
-  'id_1': {
-    linePositions: [],
-    lineColor: "",
-    lineWidth: 0,
-    position: [],
-    scale: [],
-    rotation: []
-  },
-  'id_2': {
-    ...
-  },
-  ...
-}; */
-
-io.on('connection', (socket) => {
-  console.log('CONNECT !!!!!');
-
-  // 접속하면 socketId를 저장하게함 io.to(socket.id)
-  socket.emit('user_id', { user_id: socket.id });
-
-  /* DB: mongodb */
-  // 저장된 데이터 불러오기
-  socket.on('enter bubble', (bubbleName) => {
-    console.log('enter bubble');
-
-    if (!loadedData[bubbleName]) {
-      // getSavedData(bubbleName).then((data) => {
-      //   loadedData[bubbleName] = data;
-      //   console.log(`loadedData[${bubbleName}]: `, loadedData[bubbleName]);
-      // });
-      loadedData[bubbleName] = require('./db/draw-data.json');
-    }
-
-    socket.emit('get saved bubble', loadedData[bubbleName]);
-  });
-
-
-  // 버블 데이터 저장하기
-  socket.on('save bubble', (param) => {
-    console.log('save bubble');
-    console.log('tempLine[param.userid]',tempLine[param.userid] );
-    console.log('tempLine',tempLine);
-
-    loadedData["room1"].line.push(tempLine[param.userid]); // 임시
-
-    console.log('loadedData["room1"]', loadedData["room1"]);
-    insertData(loadedData["room1"]);
-  });
-
-
-  /* Draw */
-  socket.on('draw start', (data) => {
-    console.log("draw start", data);
-
-    io.emit('draw start', data);
-
-    console.log(loadedData);
-    console.log("data.user_id", data.user_id);
-
-    let bubblename = 'room1'; //임시
-    if (loadedData[bubblename] !== null) { 
-      loadedData[bubblename].userid.push(data.user_id);
-      tempLine[data.user_id] = {
-        linePositions: [{
-          x: data.mousePos.x,
-          y: data.mousePos.y,
-          z: data.mousePos.z
-        }],
-        lineColor: data.color,
-        lineWidth: data.linewidth,
-        position: ["d"],
-        scale: ["d"],
-        rotation: ["d"]
-      };
-    }
-  });
-
-  socket.on('drawing', (data) => {
-    // console.log(data);
-
-    io.emit('drawing', data);
-
-    tempLine[data.user_id].linePositions.push({
+const initialLineData = (data) => {
+  return {
+    drawer_id: data.user_id,
+    linePositions: [{
       x: data.mousePos.x,
       y: data.mousePos.y,
       z: data.mousePos.z
-    });
-  });
+    }],
+    lineColor: data.color,
+    lineWidth: data.linewidth,
+    lineDashed: data.dashed,
+    name: data.name,
+    position: [],
+    scale: [],
+    rotation: [],
+  }
+}
 
-  socket.on('draw stop', (data) => {
-    console.log("draw stop:", data);
-    console.log("draw stop:", tempLine);
-    
-  });
+const initialShapeData = (data) => {
+  return {
+    shape: data.shape,
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
+  }
+}
 
-  socket.on('move line', (data) => {
-    moveLine(data.user_id, data.moveX, data.moveY, data.moveZ);
-  });
+let loadedData = [];
+let tempLineData = [];
 
-  socket.on('remove current', (data) => {
-    removeLastLine(data.user_id, scene);
-  });
+io.on("connection", (socket) => {
+  console.log(`CONNECT !!!!! ${socket.id}`);
 
-  /* Disconnecting */
-  socket.on('disconnecting', function () {
-    console.log("disconnect : ", socket.id);
+  // 접속하면 socketId를 저장하게함 io.to(socket.id)
+  socket.emit("user_id", { user_id: socket.id });
 
-    try {
+  // 저장된 데이터 불러오기
+  socket.on("enter bubble", (param) => {
+    console.log("enter bubble");
 
-    } catch (e) {
-      console.log('disconnect', e);
+    if (!loadedData[param]) { // 버블이 메모리에 없는 경우
+      console.log(`${param} is not in memory`);
+
+      Bubble.find({ bubbleName: param }) // DB에 있던 버블인 경우
+        .then((result) => {
+          loadedData[param] = result;
+          
+          if(loadedData[param].visitor_id.includes(socket.id) === false) {
+            loadedData[param].visitor_id.push(socket.id);
+          }
+          
+          console.log(`get loadedData[${param}]: ${loadedData[param]}`);
+
+          socket.emit("get saved bubble", loadedData[param]);
+        })
+        .catch((err) => { // DB에 없었던 버블인 경우
+          const bubble = new Bubble({bubbleName: param, owner_id: socket.id, visitor_id: socket.id});
+          
+          bubble.save(bubble)
+            .then((savedBubble) => {
+              console.log(`new bubble ${param} ${savedBubble}`);
+
+              loadedData[param] = savedBubble;
+              socket.emit("get saved bubble", savedBubble);
+            })
+            .catch((err) => console.log(err));
+        });
+    } else { // 버블이 메모리에 있는 경우
+      console.log(`${param} is in memory`);
+
+      if(loadedData[param].visitor_id.includes(socket.id) === false) {
+        loadedData[param].visitor_id.push(socket.id);
+      }
+
+      socket.emit("get saved bubble", loadedData[param]);
     }
   });
 
+  /* Draw */
+  socket.on("draw start", (data) => {
+    console.log("draw start");
+    // console.log("draw start", data);
+
+    tempLineData[data.user_id] = initialLineData(data);
+    console.log(data.name);
+    console.log(tempLineData[data.user_id]);
+    
+    io.emit("draw start", data);
+  });
+
+  socket.on("drawing", (data) => {
+    console.log("drawing");
+    // console.log("drawing", data);
+
+    tempLineData[data.user_id].linePositions.push(data.mousePos);
+
+    io.emit("drawing", data);
+  });
+
+  socket.on("draw stop", (data) => {
+    console.log("draw stop");
+    
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.push(tempLineData[data.user_id]))
+      .then((savedBubble) => {
+        console.log(`${data.bubbleName} is saved`);
+        delete tempLineData[data.user_id];
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    io.emit("draw stop", data);
+  })
+
+  socket.on("move line", (data) => {
+    // moveLine(data.user_id, data.moveX, data.moveY, data.moveZ); 사라졌다...ㅠㅠ
+    io.emit("move line", data);
+  });
+
+  socket.on("remove line", (data) => {
+    let index = loadedData[data.bubbleName].line.findIndex((obj) => obj.name == data.name);
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.splice(index, 1))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+      io.emit("remove line", data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  });
+
+  socket.on("create shape", (data) => {
+    
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].shape.push(initialShapeData(data)))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+    io.emit("create shape", data);
+  });
+
+  /* Disconnecting */
+  socket.on("disconnecting", function () {
+    console.log("disconnect : ", socket.id);
+
+    try {
+    } catch (e) {
+      console.log("disconnect", e);
+    }
+  });
 });
 
-http.listen(port, () => {
-  console.log(`Connected at ${port}`);
+const mongoose = require("mongoose");
+const Bubble = require("./db/bubbleModel.js").Bubble;
+const DB_URI = "mongodb://mongo:27017/scribubble";
+
+mongoose.connect(DB_URI).then(() => {
+  http.listen(PORT, () => {
+    console.log(`Connected at ${PORT}`);
+  });
 });
