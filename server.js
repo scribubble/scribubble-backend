@@ -23,9 +23,21 @@ const initialLineData = (data) => {
     lineColor: data.color,
     lineWidth: data.linewidth,
     lineDashed: data.dashed,
+    name: data.name,
     position: [],
     scale: [],
     rotation: [],
+  }
+}
+
+const initialShapeData = (data) => {
+  return {
+    shape: data.shape,
+    position: {
+      x: 0,
+      y: 0,
+      z: 0
+    }
   }
 }
 
@@ -86,7 +98,8 @@ io.on("connection", (socket) => {
     // console.log("draw start", data);
 
     tempLineData[data.user_id] = initialLineData(data);
-    // console.log(tempLineData[data.user_id]);
+    console.log(data.name);
+    console.log(tempLineData[data.user_id]);
     
     io.emit("draw start", data);
   });
@@ -103,7 +116,7 @@ io.on("connection", (socket) => {
   socket.on("draw stop", (data) => {
     console.log("draw stop");
     
-    Bubble.findOneAndUpdate(loadedData[data.bubbleName].line.push(tempLineData[data.user_id]))
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.push(tempLineData[data.user_id]))
       .then((savedBubble) => {
         console.log(`${data.bubbleName} is saved`);
         delete tempLineData[data.user_id];
@@ -111,14 +124,38 @@ io.on("connection", (socket) => {
       .catch((err) => {
         console.log(err);
       });
+
+    io.emit("draw stop", data);
   })
 
   socket.on("move line", (data) => {
-    moveLine(data.user_id, data.moveX, data.moveY, data.moveZ);
+    // moveLine(data.user_id, data.moveX, data.moveY, data.moveZ); 사라졌다...ㅠㅠ
+    io.emit("move line", data);
   });
 
-  socket.on("remove current", (data) => {
-    removeLastLine(data.user_id, scene);
+  socket.on("remove line", (data) => {
+    let index = loadedData[data.bubbleName].line.findIndex((obj) => obj.name == data.name);
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.splice(index, 1))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+      io.emit("remove line", data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  });
+
+  socket.on("create shape", (data) => {
+    
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].shape.push(initialShapeData(data)))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+    io.emit("create shape", data);
   });
 
   /* Disconnecting */
