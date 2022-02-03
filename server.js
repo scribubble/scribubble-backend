@@ -178,3 +178,16 @@ mongoose.connect(DB_URI).then(() => {
     console.log(`Connected at ${PORT}`);
   });
 });
+
+const schedule = require('node-schedule');
+const rule = new schedule.RecurrenceRule();
+rule.hour = 0;
+const job = schedule.scheduleJob(rule, function(){
+  Bubble.remove({})
+  .then(() => {
+    console.log('collection removed')
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+});
