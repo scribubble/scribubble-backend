@@ -9,7 +9,7 @@ const bubbleSchema = new mongoose.Schema({
         linePositions: [{
             x: Number,
             y: Number,
-            x: Number
+            z: Number
         }],
         lineColor: String,
         lineWidth: Number,
@@ -22,6 +22,7 @@ const bubbleSchema = new mongoose.Schema({
         },
     }],
     shape: [{
+        name: String,
         shape: String,
         position: {
             x: Number,
@@ -31,8 +32,7 @@ const bubbleSchema = new mongoose.Schema({
     }],
     text: [ 
         { _id: Number, html: String, tagName: String }
-    ],
-    picture: [ String ]
+    ]
 });
 
 const Bubble = mongoose.model('Bubble', bubbleSchema);

@@ -34,11 +34,12 @@ const initialLineData = (data) => {
 
 const initialShapeData = (data) => {
   return {
+    name: data.objName,
     shape: data.shape,
     position: {
-      x: 0,
-      y: 0,
-      z: 0
+      x: data.position.x,
+      y: data.position.y,
+      z: data.position.z
     }
   }
 }
@@ -57,7 +58,7 @@ io.on("connection", (socket) => {
     console.log("enter bubble");
 
     if (!loadedData[param]) { // 버블이 메모리에 없는 경우
-      console.log(`${param} is not in memory`);
+      // console.log(`${param} is not in memory`);
 
       Bubble.find({ bubbleName: param }) // DB에 있던 버블인 경우
         .then((result) => {
@@ -67,16 +68,18 @@ io.on("connection", (socket) => {
             loadedData[param].visitor_id.push(socket.id);
           }
           
-          console.log(`get loadedData[${param}]: ${loadedData[param]}`);
+          // console.log(`get loadedData[${param}]: ${loadedData[param]}`);
 
           socket.emit("get saved bubble", loadedData[param]);
         })
         .catch((err) => { // DB에 없었던 버블인 경우
-          const bubble = new Bubble({bubbleName: param, owner_id: socket.id, visitor_id: socket.id});
+          const bubble = new Bubble(
+            {bubbleName: param, owner_id: socket.id, visitor_id: socket.id}
+          );
           
           bubble.save(bubble)
             .then((savedBubble) => {
-              console.log(`new bubble ${param} ${savedBubble}`);
+              // console.log(`new bubble ${param} ${savedBubble}`);
 
               loadedData[param] = savedBubble;
               socket.emit("get saved bubble", savedBubble);
@@ -84,7 +87,7 @@ io.on("connection", (socket) => {
             .catch((err) => console.log(err));
         });
     } else { // 버블이 메모리에 있는 경우
-      console.log(`${param} is in memory`);
+      // console.log(`${param} is in memory`);
 
       if(loadedData[param].visitor_id.includes(socket.id) === false) {
         loadedData[param].visitor_id.push(socket.id);
@@ -96,18 +99,18 @@ io.on("connection", (socket) => {
 
   /* Draw */
   socket.on("draw start", (data) => {
-    console.log("draw start");
+    // console.log("draw start");
     // console.log("draw start", data);
 
     tempLineData[data.user_id] = initialLineData(data);
-    console.log(data.name);
-    console.log(tempLineData[data.user_id]);
+    // console.log(data.name);
+    // console.log(tempLineData[data.user_id]);
     
     io.emit("draw start", data);
   });
 
   socket.on("drawing", (data) => {
-    console.log("drawing");
+    // console.log("drawing");
     // console.log("drawing", data);
 
     tempLineData[data.user_id].linePositions.push(data.mousePos);
@@ -116,9 +119,10 @@ io.on("connection", (socket) => {
   });
 
   socket.on("draw stop", (data) => {
-    console.log("draw stop");
+    // console.log("draw stop");
     
-    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.push(tempLineData[data.user_id]))
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, 
+      loadedData[data.bubbleName].line.push(tempLineData[data.user_id]))
       .then((savedBubble) => {
         console.log(`${data.bubbleName} is saved`);
         delete tempLineData[data.user_id];
@@ -130,7 +134,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("move obj", (data) => {
-    console.log("move obj");
+    // console.log("move obj");
 
     Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, 
       loadedData[data.bubbleName].line.map((line) => {
@@ -141,7 +145,7 @@ io.on("connection", (socket) => {
       }
     ))
     .then((savedBubble) => {
-      console.log(`${data.bubbleName} is saved`);
+      // console.log(`${data.bubbleName} is saved`);
       io.emit("move obj", data);
     })
     .catch((err) => {
@@ -151,9 +155,10 @@ io.on("connection", (socket) => {
 
   socket.on("remove line", (data) => {
     let index = loadedData[data.bubbleName].line.findIndex((obj) => obj.name == data.name);
-    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].line.splice(index, 1))
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, 
+      loadedData[data.bubbleName].line.splice(index, 1))
     .then((savedBubble) => {
-      console.log(`${data.bubbleName} is saved`);
+      // console.log(`${data.bubbleName} is saved`);
       io.emit("remove line", data);
     })
     .catch((err) => {
@@ -163,15 +168,15 @@ io.on("connection", (socket) => {
 
   socket.on("create shape", (data) => {
     
-    // Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].shape.push(initialShapeData(data)))
-    // .then((savedBubble) => {
-    //   console.log(`${data.bubbleName} is saved`);
-    // })
-    // .catch((err) => {
-    //   console.log(err);
-    // });
-
-    io.emit("create shape", data);
+    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, 
+      loadedData[data.bubbleName].shape.push(initialShapeData(data)))
+    .then((savedBubble) => {
+      console.log(`${data.bubbleName} is saved`);
+      socket.broadcast.emit("create shape", data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   });
 
   /* Disconnecting */
