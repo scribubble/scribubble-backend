@@ -128,9 +128,9 @@ io.on("connection", (socket) => {
     io.emit("draw stop", data);
   })
 
-  socket.on("move line", (data) => {
-    // moveLine(data.user_id, data.moveX, data.moveY, data.moveZ); 사라졌다...ㅠㅠ
-    io.emit("move line", data);
+  socket.on("move obj", (data) => {
+    console.log(data);
+    io.emit("move obj", data);
   });
 
   socket.on("remove line", (data) => {
@@ -147,13 +147,13 @@ io.on("connection", (socket) => {
 
   socket.on("create shape", (data) => {
     
-    Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].shape.push(initialShapeData(data)))
-    .then((savedBubble) => {
-      console.log(`${data.bubbleName} is saved`);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+    // Bubble.findOneAndUpdate({bubbleName: data.bubbleName}, loadedData[data.bubbleName].shape.push(initialShapeData(data)))
+    // .then((savedBubble) => {
+    //   console.log(`${data.bubbleName} is saved`);
+    // })
+    // .catch((err) => {
+    //   console.log(err);
+    // });
 
     io.emit("create shape", data);
   });
