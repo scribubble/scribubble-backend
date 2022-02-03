@@ -169,6 +169,7 @@ io.on("connection", (socket) => {
   });
 });
 
+/* mongoose */
 const mongoose = require("mongoose");
 const Bubble = require("./db/bubbleModel.js").Bubble;
 const DB_URI = "mongodb://mongo:27017/scribubble";
@@ -176,5 +177,18 @@ const DB_URI = "mongodb://mongo:27017/scribubble";
 mongoose.connect(DB_URI).then(() => {
   http.listen(PORT, () => {
     console.log(`Connected at ${PORT}`);
+  });
+});
+
+/* node-schedule */
+const schedule = require('node-schedule');
+
+const rule = new schedule.RecurrenceRule();
+rule.hour = 0;
+
+const job = schedule.scheduleJob(rule, function(){
+  Bubble.deleteMany({}, () => {
+    loadedData = [];
+    console.log('collection removed');
   });
 });
