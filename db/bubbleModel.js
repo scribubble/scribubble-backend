@@ -29,10 +29,7 @@ const bubbleSchema = new mongoose.Schema({
             y: Number,
             z: Number
         } 
-    }],
-    text: [ 
-        { _id: Number, html: String, tagName: String }
-    ]
+    }]
 });
 
 const Bubble = mongoose.model('Bubble', bubbleSchema);
