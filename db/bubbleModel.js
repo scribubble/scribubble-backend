@@ -1,37 +1,69 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const bubbleSchema = new mongoose.Schema({
-    bubbleName: String,
-    owner_id: String,
-    visitor_id: [ String ],
-    line: [{
-        drawer_id: String,
-        linePositions: [{
-            x: Number,
-            y: Number,
-            z: Number
-        }],
-        lineColor: String,
-        lineWidth: Number,
-        lineDashed: Boolean,
-        name: String,
-        position: {
-            x: Number,
-            y: Number,
-            z: Number,
-        },
-    }],
-    shape: [{
-        name: String,
-        shape: String,
-        position: {
-            x: Number,
-            y: Number,
-            z: Number
-        } 
-    }]
+const lineSchema = new Schema({
+  drawer_id: { type: String, default: '' },
+  linePositions: [
+    {
+      x: { type: Number, default: 0 },
+      y: { type: Number, default: 0 },
+      z: { type: Number, default: 0 },
+    },
+  ],
+  lineColor: { type: String, default: '#000000' },
+  lineWidth: { type: Number, default: 0 },
+  lineDashed: { type: Boolean, default: false },
+  objName: { type: String, default: '' },
+  tfcPosition: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+  tfcScale: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+  tfcRotation: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
 });
 
-const Bubble = mongoose.model('Bubble', bubbleSchema);
+const Line = mongoose.model("Line", lineSchema);
 
-module.exports = { Bubble };
+const shapeSchema = new Schema({
+  objName: { type: String, default: '' },
+  shape: { type: String, default: '' },
+  color: { type: String, default: '#000000' },
+  position: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+  scale: {
+    x: { type: Number, default: 1 },
+    y: { type: Number, default: 1 },
+    z: { type: Number, default: 1 },
+  },
+  rotation: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
+});
+
+const Shape = mongoose.model("Shape", shapeSchema);
+
+const bubbleSchema = new Schema({
+  bubbleName: { type: String, default: '' },
+  owner_id: { type: String, default: '' },
+  visitor_id: [{ type: String, default: '' }],
+  line: [ lineSchema ],
+  shape: [ shapeSchema ],
+});
+
+const Bubble = mongoose.model("Bubble", bubbleSchema);
+
+module.exports = { Bubble, Line, Shape };
