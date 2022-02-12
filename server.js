@@ -41,8 +41,6 @@ io.on("connection", (socket) => {
 
       Bubble.findOne(query)
         .then((result) => { 
-          console.log(`콘솔 시작`);
-          console.log(`result ${result}`);
 
           if(result !== null) { // DB에 있던 버블인 경우
             console.log(1); 
@@ -54,26 +52,15 @@ io.on("connection", (socket) => {
             
             // console.log(`get loadedData[${param}]: ${loadedData[param]}`);
           } else { // DB에 없었던 버블인 경우
-            console.log(2); 
             const newBubble = new Bubble(
               {bubbleName: param, owner_id: socket.id, visitor_id: socket.id}
             );
-            console.log(newBubble); 
             loadedData[param] = newBubble;
-            
-            // newBubble.save(newBubble)
-            //   .then((savedBubble) => {
-            //     console.log(`new bubble ${param} ${savedBubble}`);
-  
-            //     loadedData[param] = savedBubble;
-            //   })
-            //   .catch((err) => console.log(err));
           }
           io.to(socket.id).emit("get saved bubble", loadedData[param]);
         })
         .catch((err) => console.log(err));
     } else {
-      console.log(3);
       io.to(socket.id).emit("get saved bubble", loadedData[param]);
     }
   });
@@ -117,7 +104,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("draw stop", (data) => {
-    console.log("draw stop", data);
+    // console.log("draw stop", data);
 
     loadedData[data.bubbleName].tfcPosition = data.tfcPosition;
     loadedData[data.bubbleName].position = data.position;
@@ -151,21 +138,18 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move obj", (data) => {
-    console.log("move obj", data);
+    // console.log("move obj", data);
     let index = loadedData[data.bubbleName].lines.findIndex(
       (obj) => obj.objName === data.objName
     );
-    console.log(index, data.objName);
+    // console.log(index, data.objName);
     if (index >= 0) {
-      let before = loadedData[data.bubbleName].lines[0].position.x;
       loadedData[data.bubbleName].lines.map((obj) => {
         if (obj.objName === data.objName) {
           obj.position = data.position;
-          console.log(`obj lines ${obj.objName === data.objName}`);
+          // console.log(`obj lines ${obj.objName === data.objName}`);
         }
       });
-      let after = loadedData[data.bubbleName].lines[0].position.x;
-      console.log(`ba ${before === after}`);
     } else {
       index = loadedData[data.bubbleName].shapes.findIndex(
         (obj) => obj.objName === data.objName
@@ -192,7 +176,7 @@ io.on("connection", (socket) => {
     let index = loadedData[data.bubbleName].lines.findIndex((obj) => 
       obj.objName == data.objName
     );
-    console.log(index);
+    // console.log(index);
 
     if (index >= 0) {
       loadedData[data.bubbleName].lines.splice(index, 1);
