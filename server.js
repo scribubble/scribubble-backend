@@ -15,6 +15,20 @@ const io = require("socket.io")(http, {
 let loadedData = [];
 let tempLineData = [];
 
+const { adjective, animal } = require('./data/name');
+
+
+function shuffle(a) {
+  var j, x, i;
+  for (i = a.length; i; i --) {
+    j = Math.floor(Math.random() * i);
+    x = a[i - 1];
+    a[i - 1] = a[j];
+    a[j] = x;
+  }
+}
+let nameIdx = 0;
+
 io.on("connection", (socket) => {
   console.log(`CONNECT !!!! ${socket.id}`);
 
@@ -26,7 +40,14 @@ io.on("connection", (socket) => {
   // });
 
   // 접속하면 socketId를 저장하게함 io.to(socket.id)
-  socket.emit("user_id", { user_id: socket.id });
+  socket.emit("user_id", { user_id: socket.id, nickname: adj[nameIdx % adj.length] + animal[nameIdx % animal.length] });
+  nameIdx++;
+  if (nameIdx >= adj.length * animal.length)
+  {
+    nameIdx = 0;
+    shuffle(adjective);
+    shuffle(animal);
+  }
 
   // 저장된 데이터 불러오기
   socket.on("enter bubble", (param) => {
