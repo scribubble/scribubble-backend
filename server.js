@@ -212,21 +212,23 @@ io.on("connection", (socket) => {
     try {
       let roomArray = Array.from(socket.rooms);
       console.log(`${socket.id} is disconnecting from ${roomArray}`);
-
+      // console.log(roomArray);
       for (let i = 1; i < roomArray.length; i++) {
-        if (loadedData[roomArray[i]]) {
+        let clientCount = io.sockets.adapter.rooms.get(roomArray[i]).size;
+        // console.log(clientCount);
+        if (clientCount === 1 && loadedData[roomArray[i]]) {
           let query = { bubbleName: roomArray[i] };
           Bubble.findOneAndUpdate(
             query,
             loadedData[roomArray[i]],
             { overwrite: true }
           )
-            .then((savedBubble) => {
-              console.log(`${roomArray[i]} is saved`);
-            })
-            .catch((err) => {
-              console.log(err);
-            });
+          .then((savedBubble) => {
+            console.log(`${roomArray[i]} is saved`);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
         }
       }
     } catch (e) {
