@@ -1,37 +1,46 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const bubbleSchema = new mongoose.Schema({
-    bubbleName: String,
-    owner_id: String,
-    visitor_id: [ String ],
-    line: [{
-        drawer_id: String,
-        linePositions: [{
-            x: Number,
-            y: Number,
-            z: Number
-        }],
-        lineColor: String,
-        lineWidth: Number,
-        lineDashed: Boolean,
-        name: String,
-        position: {
-            x: Number,
-            y: Number,
-            z: Number,
-        },
-    }],
-    shape: [{
-        name: String,
-        shape: String,
-        position: {
-            x: Number,
-            y: Number,
-            z: Number
-        } 
-    }]
+const vectorSchema = new Schema({
+  x: { type: Number, default: 0 },
+  y: { type: Number, default: 0 },
+  z: { type: Number, default: 0 },
 });
 
-const Bubble = mongoose.model('Bubble', bubbleSchema);
+const lineSchema = new Schema({
+  drawer_id: { type: String, default: '' },
+  linePositions: { type: [vectorSchema], default: [] },
+  lineColor: { type: String, default: '#000000' },
+  lineWidth: { type: Number, default: 0 },
+  lineDashed: { type: Boolean, default: false },
+  objName: { type: String, default: '' },
+  position: { type: vectorSchema, default: {}},
+  tfcPosition: { type: vectorSchema, default: {}},
+  tfcScale: { type: vectorSchema, default: {}},
+  tfcRotation: { type: vectorSchema, default: {}},
+});
 
-module.exports = { Bubble };
+const Line = mongoose.model("Line", lineSchema);
+
+const shapeSchema = new Schema({
+  objName: { type: String, default: '' },
+  shape: { type: String, default: '' },
+  color: { type: String, default: '#000000' },
+  position: { type: vectorSchema, default: {}},
+  scale: { type: vectorSchema, default: {}},
+  rotation: { type: vectorSchema, default: {}},
+});
+
+const Shape = mongoose.model("Shape", shapeSchema);
+
+const bubbleSchema = new Schema({
+  bubbleName: { type: String, default: '' },
+  owner_id: { type: String, default: '' },
+  visitor_id: [{ type: String, default: '' }],
+  lines: { type: [lineSchema], default: [] },
+  shapes: { type: [shapeSchema], default: [] },
+});
+
+const Bubble = mongoose.model("Bubble", bubbleSchema);
+
+module.exports = { Bubble, Line, Shape };
