@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
       lineWidth: data.linewidth,
       lineColor: data.color,
       lineDashed: data.dashed,
-      objName: data.name,
+      objName: data.objName,
       linePositions: [
         {
           x: data.mousePos.x,
@@ -116,7 +116,8 @@ io.on("connection", (socket) => {
   socket.on("draw stop", (data) => {
     console.log("draw stop", data);
     console.log(loadedData[data.bubbleName]);
-    loadedData[data.bubbleName].line.push(tempLineData[data.user_id]);
+
+    loadedData[data.bubbleName].lines.push(tempLineData[data.user_id]);
     delete tempLineData[data.user_id];
 
     io.emit("draw stop", data);
@@ -126,7 +127,7 @@ io.on("connection", (socket) => {
   socket.on("create shape", (data) => {
     // console.log("create  shape");
 
-    loadedData[data.bubbleName].shape.push(
+    loadedData[data.bubbleName].shapes.push(
       new Shape({
         shape: data.shape,
         color: data.color,
@@ -143,31 +144,32 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move obj", (data) => {
-    // console.log("move obj");
-    let index = loadedData[data.bubbleName].line.findIndex(
+    console.log("move obj");
+    let index = loadedData[data.bubbleName].lines.findIndex(
       (obj) => obj.objName === data.objName
     );
 
     if (index >= 0) {
-      loadedData[data.bubbleName].line.map((obj) => {
+      loadedData[data.bubbleName].lines.map((obj) => {
         if (obj.objName === data.objName) {
-          obj.position.x = data.position.x;
-          obj.position.y = data.position.y;
-          obj.position.z = data.position.z;
-          // console.log(`obj line ${obj.name === data.objName}`);
+          obj.tfcPosition.x = data.position.x;
+          obj.tfcPosition.y = data.position.y;
+          obj.tfcPosition.z = data.position.z;
+          // console.log(`obj lines ${obj.name === data.objName}`);
         }
       });
     } else {
-      index = loadedData[data.bubbleName].shape.findIndex(
+      index = loadedData[data.bubbleName].shapes.findIndex(
         (obj) => obj.objName === data.objName
       );
 
-      loadedData[data.bubbleName].shape.map((obj) => {
+      console.log(index, data.objName);
+      loadedData[data.bubbleName].shapes.map((obj) => {
         if (obj.objName === data.objName) {
           obj.position.x = data.position.x;
           obj.position.y = data.position.y;
           obj.position.z = data.position.z;
-          // console.log(`obj shape ${obj.name === data.objName}`);
+          console.log(`obj shapes ${obj.objName === data.objName}`);
         }
       });
     }
@@ -175,19 +177,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("delete obj", (data) => {
-    let index = loadedData[data.bubbleName].line.findIndex(
-      (obj) => obj.objName === data.objName
+    let index = loadedData[data.bubbleName].lines.findIndex((obj) => 
+      obj.objName == data.objName
     );
     // console.log(index);
 
     if (index >= 0) {
-      loadedData[data.bubbleName].line.splice(index, 1);
+      loadedData[data.bubbleName].lines.splice(index, 1);
     } else {
-      index = loadedData[data.bubbleName].shape.findIndex(
-        (obj) => obj.objName === data.objName
+      index = loadedData[data.bubbleName].shapes.findIndex(
+        (obj) => obj.objName == data.objName
       );
 
-      loadedData[data.bubbleName].shape.splice(index, 1);
+      loadedData[data.bubbleName].shapes.splice(index, 1);
       // console.log(index);
     }
     io.to(data.bubbleName).emit("delete obj", data);

@@ -60,8 +60,8 @@ const bubbleSchema = new Schema({
   bubbleName: { type: String, default: '' },
   owner_id: { type: String, default: '' },
   visitor_id: [{ type: String, default: '' }],
-  line: [ lineSchema ],
-  shape: [ shapeSchema ],
+  lines: { type: [lineSchema], default: [] },
+  shapes: { type: [shapeSchema], default: [] },
 });
 
 const Bubble = mongoose.model("Bubble", bubbleSchema);
