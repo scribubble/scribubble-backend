@@ -83,6 +83,10 @@ io.on("connection", (socket) => {
           z: data.mousePos.z,
         },
       ],
+      position: { x: 0, y: 0, z: 0},
+      tfcPosition: { x: 0, y: 0, z: 0},
+      tfcScale: { x: 1, y: 1, z: 1},
+      tfcRotation: { x: 0, y: 0, z: 0}
     });
     // console.log(data.name);
     // console.log(tempLineData[data.user_id]);
@@ -99,15 +103,15 @@ io.on("connection", (socket) => {
     tempLineData[data.user_id].linePositions.push(data.mousePos);
 
     io.emit("drawing", data);
-    // socket.emit("drawing", data);
+    socket.emit("drawing", data);
     // socket.to(data.bubbleName).emit("drawing", data);
   });
 
   socket.on("draw stop", (data) => {
     // console.log("draw stop", data);
-
-    loadedData[data.bubbleName].tfcPosition = data.tfcPosition;
-    loadedData[data.bubbleName].position = data.position;
+    // console.log(tempLineData[data.bubbleName]);
+    tempLineData[data.user_id].tfcPosition = data.tfcPosition;
+    tempLineData[data.user_id].position = data.position;
 
     loadedData[data.bubbleName].lines.push(tempLineData[data.user_id]);
     delete tempLineData[data.user_id];
@@ -146,7 +150,7 @@ io.on("connection", (socket) => {
     if (index >= 0) {
       loadedData[data.bubbleName].lines.map((obj) => {
         if (obj.objName === data.objName) {
-          obj.position = data.position;
+          obj.tfcPosition = data.tfcPosition;
           // console.log(`obj lines ${obj.objName === data.objName}`);
         }
       });
