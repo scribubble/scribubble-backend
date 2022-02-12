@@ -14,6 +14,11 @@ const lineSchema = new Schema({
   lineWidth: { type: Number, default: 0 },
   lineDashed: { type: Boolean, default: false },
   objName: { type: String, default: '' },
+  position: {
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    z: { type: Number, default: 0 },
+  },
   tfcPosition: {
     x: { type: Number, default: 0 },
     y: { type: Number, default: 0 },

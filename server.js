@@ -118,7 +118,9 @@ io.on("connection", (socket) => {
 
   socket.on("draw stop", (data) => {
     console.log("draw stop", data);
-    console.log(loadedData[data.bubbleName]);
+
+    loadedData[data.bubbleName].tfcPosition = data.tfcPosition;
+    loadedData[data.bubbleName].position = data.position;
 
     loadedData[data.bubbleName].lines.push(tempLineData[data.user_id]);
     delete tempLineData[data.user_id];
@@ -149,34 +151,33 @@ io.on("connection", (socket) => {
   });
 
   socket.on("move obj", (data) => {
-    console.log("move obj");
+    console.log("move obj", data);
     let index = loadedData[data.bubbleName].lines.findIndex(
       (obj) => obj.objName === data.objName
     );
     console.log(index, data.objName);
     if (index >= 0) {
+      let before = loadedData[data.bubbleName].lines[0].position.x;
       loadedData[data.bubbleName].lines.map((obj) => {
         if (obj.objName === data.objName) {
-          obj.tfcPosition.x = data.position.x;
-          obj.tfcPosition.y = data.position.y;
-          obj.tfcPosition.z = data.position.z;
-          // console.log(`obj lines ${obj.name === data.objName}`);
+          obj.position = data.position;
+          console.log(`obj lines ${obj.objName === data.objName}`);
         }
       });
+      let after = loadedData[data.bubbleName].lines[0].position.x;
+      console.log(`ba ${before === after}`);
     } else {
       index = loadedData[data.bubbleName].shapes.findIndex(
         (obj) => obj.objName === data.objName
       );
-      console.log(index, data.objName);
+      // console.log(index, data.objName);
       loadedData[data.bubbleName].shapes.map((obj) => {
         if (obj.objName === data.objName) {
-          obj.position.x = data.position.x;
-          obj.position.y = data.position.y;
-          obj.position.z = data.position.z;
-          console.log(`obj shapes ${obj.objName === data.objName}`);
+          obj.position = data.position;
+          // console.log(`obj shapes ${obj.objName === data.objName}`);
         }
       });
-      console.log(data.position);
+      // console.log(data.position);
     }
     socket.to(data.bubbleName).emit("move obj", data);
   });
