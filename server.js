@@ -73,6 +73,7 @@ io.on("connection", (socket) => {
         })
         .catch((err) => console.log(err));
     } else {
+      console.log(3);
       io.to(socket.id).emit("get saved bubble", loadedData[param]);
     }
   });
@@ -100,7 +101,8 @@ io.on("connection", (socket) => {
     // console.log(tempLineData[data.user_id]);
 
     io.emit("draw start", data);
-    // io.to(data.bubbleName).emit("draw start", data);
+    // socket.emit("draw start", data);
+    // socket.to(data.bubbleName).emit("draw start", data);
   });
 
   socket.on("drawing", (data) => {
@@ -110,7 +112,8 @@ io.on("connection", (socket) => {
     tempLineData[data.user_id].linePositions.push(data.mousePos);
 
     io.emit("drawing", data);
-    // io.to(data.bubbleName).emit("drawing", data);
+    // socket.emit("drawing", data);
+    // socket.to(data.bubbleName).emit("drawing", data);
   });
 
   socket.on("draw stop", (data) => {
@@ -121,7 +124,9 @@ io.on("connection", (socket) => {
     delete tempLineData[data.user_id];
 
     io.emit("draw stop", data);
-    // io.to(data.bubbleName).emit("draw stop", data);
+    // io.in(data.bubbleName).emit("draw stop", data); 
+    // socket.emit("draw stop", data);
+    // socket.to(data.bubbleName).emit("draw stop", data);
   });
 
   socket.on("create shape", (data) => {
@@ -140,7 +145,7 @@ io.on("connection", (socket) => {
       })
     );
 
-    io.to(data.bubbleName).emit("create shape", data);
+    socket.to(data.bubbleName).emit("create shape", data);
   });
 
   socket.on("move obj", (data) => {
@@ -148,7 +153,7 @@ io.on("connection", (socket) => {
     let index = loadedData[data.bubbleName].lines.findIndex(
       (obj) => obj.objName === data.objName
     );
-
+    console.log(index, data.objName);
     if (index >= 0) {
       loadedData[data.bubbleName].lines.map((obj) => {
         if (obj.objName === data.objName) {
@@ -162,7 +167,6 @@ io.on("connection", (socket) => {
       index = loadedData[data.bubbleName].shapes.findIndex(
         (obj) => obj.objName === data.objName
       );
-
       console.log(index, data.objName);
       loadedData[data.bubbleName].shapes.map((obj) => {
         if (obj.objName === data.objName) {
@@ -172,15 +176,22 @@ io.on("connection", (socket) => {
           console.log(`obj shapes ${obj.objName === data.objName}`);
         }
       });
+      console.log(data.position);
     }
-    io.to(data.bubbleName).emit("move obj", data);
+    socket.to(data.bubbleName).emit("move obj", data);
   });
 
   socket.on("delete obj", (data) => {
+    // console.log(typeof loadedData[data.bubbleName]);
+    // console.log(typeof loadedData[data.bubbleName].lines);
+    // console.log(typeof loadedData[data.bubbleName].lines[0]);
+    // console.log( loadedData[data.bubbleName] instanceof Object);
+    // console.log( loadedData[data.bubbleName].lines instanceof Array);
+    // console.log( loadedData[data.bubbleName].lines[0] instanceof Object);
     let index = loadedData[data.bubbleName].lines.findIndex((obj) => 
       obj.objName == data.objName
     );
-    // console.log(index);
+    console.log(index);
 
     if (index >= 0) {
       loadedData[data.bubbleName].lines.splice(index, 1);
@@ -192,7 +203,7 @@ io.on("connection", (socket) => {
       loadedData[data.bubbleName].shapes.splice(index, 1);
       // console.log(index);
     }
-    io.to(data.bubbleName).emit("delete obj", data);
+    socket.to(data.bubbleName).emit("delete obj", data);
   });
 
   /* Disconnect */
