@@ -141,6 +141,26 @@ io.on("connection", (socket) => {
     socket.to(data.bubbleName).emit("create shape", data);
   });
 
+  function findObjByObjName(bubbleName, objName) {
+    let result = { objType: "", index : 0};
+    
+    let index = loadedData[bubbleName].lines.findIndex(
+      (obj) => obj.objName === objName
+    );
+
+    if(index >= 0) {
+      result.objType = 'lines';
+      result.index = index;
+    } else {
+      index = loadedData[bubbleName].shapes.findIndex(
+        (obj) => obj.objName === objName
+      );
+      result.objType = 'shapes';
+      result.index = index;
+    }
+
+    return result;
+  }
   socket.on("move obj", (data) => {
     // console.log("move obj", data);
     let index = loadedData[data.bubbleName].lines.findIndex(
@@ -167,7 +187,20 @@ io.on("connection", (socket) => {
       });
       // console.log(data.position);
     }
+    
     socket.to(data.bubbleName).emit("move obj", data);
+  });
+
+  socket.on("scale obj", (data) => {
+    const result = findObjByObjName(data.bubbleName, data.objName);
+    
+    if(result.objType === 'lines') {
+      loadedData[data.bubbleName][result.objType][result.index].tfcScale = data.scale;
+    } else if(result.objType === 'shapes'){
+      loadedData[data.bubbleName][result.objType][result.index].scale = data.scale;
+    }
+
+    socket.to(data.bubbleName).emit("scale obj", data);
   });
 
   socket.on("delete obj", (data) => {
