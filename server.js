@@ -40,9 +40,9 @@ io.on("connection", (socket) => {
   // });
 
   // 접속하면 socketId를 저장하게함 io.to(socket.id)
-  socket.emit("user_id", { user_id: socket.id, nickname: adj[nameIdx % adj.length] + animal[nameIdx % animal.length] });
+  socket.emit("user_id", { user_id: socket.id, user_nickname: adjective[nameIdx % adjective.length] + ' ' + animal[nameIdx % animal.length] });
   nameIdx++;
-  if (nameIdx >= adj.length * animal.length)
+  if (nameIdx >= adjective.length * animal.length)
   {
     nameIdx = 0;
     shuffle(adjective);
