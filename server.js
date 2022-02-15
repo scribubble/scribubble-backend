@@ -91,7 +91,7 @@ io.on("connection", (socket) => {
     // console.log("draw start");
     // console.log("draw start", data);
 
-    tempLineData[data.user_id] = new Line({
+    loadedData[data.bubbleName].lines.push(new Line({
       drawer_id: data.user_id,
       lineWidth: data.linewidth,
       lineColor: data.color,
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
       tfcPosition: { x: 0, y: 0, z: 0},
       tfcScale: { x: 1, y: 1, z: 1},
       tfcRotation: { x: 0, y: 0, z: 0}
-    });
+    }));
     // console.log(data.name);
     // console.log(tempLineData[data.user_id]);
 
@@ -120,8 +120,8 @@ io.on("connection", (socket) => {
   socket.on("drawing", (data) => {
     // console.log("drawing");
     // console.log("drawing", data);
-
-    tempLineData[data.user_id].linePositions.push(data.mousePos);
+    let index = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+    loadedData[data.bubbleName].lines[index].linePositions.push(data.mousePos);
 
     io.emit("drawing", data);
     socket.emit("drawing", data);
@@ -131,11 +131,9 @@ io.on("connection", (socket) => {
   socket.on("draw stop", (data) => {
     // console.log("draw stop", data);
     // console.log(tempLineData[data.bubbleName]);
-    tempLineData[data.user_id].tfcPosition = data.tfcPosition;
-    tempLineData[data.user_id].position = data.position;
-
-    loadedData[data.bubbleName].lines.push(tempLineData[data.user_id]);
-    delete tempLineData[data.user_id];
+    let index = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+    loadedData[data.bubbleName].lines[index].tfcPosition = data.tfcPosition;
+    loadedData[data.bubbleName].lines[index].position = data.position;
 
     io.emit("draw stop", data);
     // io.in(data.bubbleName).emit("draw stop", data); 
