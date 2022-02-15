@@ -135,6 +135,11 @@ io.on("connection", (socket) => {
           y: data.position.y,
           z: data.position.z,
         },
+        scale: {
+          x: data.scale.x,
+          y: data.scale.y,
+          z: data.scale.z,
+        },
       })
     );
 
@@ -142,7 +147,7 @@ io.on("connection", (socket) => {
   });
 
   function findObjByObjName(bubbleName, objName) {
-    let result = { objType: "", index : 0};
+    let result = { objType: "", index : -1};
     
     let index = loadedData[bubbleName].lines.findIndex(
       (obj) => obj.objName === objName
@@ -201,6 +206,18 @@ io.on("connection", (socket) => {
     }
 
     socket.to(data.bubbleName).emit("scale obj", data);
+  });
+
+  socket.on("rotate obj", (data) => {
+    const result = findObjByObjName(data.bubbleName, data.objName);
+    
+    if(result.objType === 'lines') {
+      loadedData[data.bubbleName][result.objType][result.index].tfcRotation = data.rotation;
+    } else if(result.objType === 'shapes'){
+      loadedData[data.bubbleName][result.objType][result.index].rotation = data.rotation;
+    }
+
+    socket.to(data.bubbleName).emit("rotate obj", data);
   });
 
   socket.on("delete obj", (data) => {
