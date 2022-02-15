@@ -40,7 +40,9 @@ io.on("connection", (socket) => {
   // });
 
   // 접속하면 socketId를 저장하게함 io.to(socket.id)
-  socket.emit("user_id", { user_id: socket.id, user_nickname: adjective[nameIdx % adjective.length] + ' ' + animal[nameIdx % animal.length] });
+  // 랜덤 유저 이름 제작
+  socket.user_nickname = adjective[nameIdx % adjective.length] + ' ' + animal[nameIdx % animal.length];
+  socket.emit("user_id", { user_id: socket.id, user_nickname: socket.user_nickname });
   nameIdx++;
   if (nameIdx >= adjective.length * animal.length)
   {
@@ -49,10 +51,28 @@ io.on("connection", (socket) => {
     shuffle(animal);
   }
 
+  // 내가 접속함을 알림
+  io.emit("user enter", { user_id: socket.id, user_nickname: socket.user_nickname });
+
   // 저장된 데이터 불러오기
   socket.on("enter bubble", (param) => {
-    console.log(`enter bubble ${param}`);
-    
+
+    // 방에 접속하고 있는 인원들에 대한 목록을 보내줌
+    const uList = io.sockets.adapter.rooms.get(param);
+    if (uList)
+    {
+      socket.emit("user list", {
+        userList: Array.from(uList).map((sID) => {
+          const so = io.sockets.sockets.get(sID);
+          return {
+            user_id: sID,
+            user_nickname: so.user_nickname
+          };
+        })
+      });
+    }
+
+    // 방에 접속
     socket.join(param);
 
     if (!loadedData[param]) { // 요청한 버블이 메모리에 없는 경우
@@ -298,6 +318,8 @@ io.on("connection", (socket) => {
   /* Disconnect */
   socket.on("disconnecting", function () {
     try {
+      io.emit("user exit", { user_id: socket.id, user_nickname: socket.user_nickname });
+
       let roomArray = Array.from(socket.rooms);
       console.log(`${socket.id} is disconnecting from ${roomArray}`);
       // console.log(roomArray);
