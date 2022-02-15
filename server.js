@@ -140,7 +140,7 @@ io.on("connection", (socket) => {
   socket.on("drawing", (data) => {
     // console.log("drawing");
     // console.log("drawing", data);
-    let index = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+    let index = findObjByObjName(data.bubbleName, data.objName);
     loadedData[data.bubbleName].lines[index].linePositions.push(data.mousePos);
 
     io.emit("drawing", data);
@@ -151,7 +151,7 @@ io.on("connection", (socket) => {
   socket.on("draw stop", (data) => {
     // console.log("draw stop", data);
     // console.log(tempLineData[data.bubbleName]);
-    let index = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+    let index = findObjByObjName(data.bubbleName, data.objName);
     loadedData[data.bubbleName].lines[index].tfcPosition = data.tfcPosition;
     loadedData[data.bubbleName].lines[index].position = data.position;
 
@@ -264,27 +264,14 @@ io.on("connection", (socket) => {
     socket.to(data.bubbleName).emit("scale obj", data);
   });
 
-  function findLineIdxByObjName(data) {
-    return loadedData[data.bubbleName].lines.findIndex(
-      (obj) => obj.objName === data.objName
-    );
-  }
-  
-  function findShapeIdxByObjName(data) {
-    return loadedData[data.bubbleName].shapes.findIndex(
-      (obj) => obj.objName === data.objName
-    );
-  }
 
   socket.on("change obj color", (data) => {
-    let idx = -1;
-    // console.log(data);
-    if(data.objType === 'Line2') {
-      idx = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
-      loadedData[data.bubbleName].lines[idx].lineColor = data.color;
-    } else {
-      idx = findShapeIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
-      loadedData[data.bubbleName].shapes[idx].color = data.color;
+    const result = findObjByObjName(data.bubbleName, data.objName);
+    
+    if(result.objType === 'lines') {
+      loadedData[data.bubbleName][result.objType][result.index].lineColor = data.color;
+    } else if(result.objType === 'shapes'){
+      loadedData[data.bubbleName][result.objType][result.index].color = data.color;
     }
 
     socket.to(data.bubbleName).emit("change obj color", data);
