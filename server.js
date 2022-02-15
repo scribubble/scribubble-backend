@@ -246,6 +246,32 @@ io.on("connection", (socket) => {
     socket.to(data.bubbleName).emit("scale obj", data);
   });
 
+  function findLineIdxByObjName(data) {
+    return loadedData[data.bubbleName].lines.findIndex(
+      (obj) => obj.objName === data.objName
+    );
+  }
+  
+  function findShapeIdxByObjName(data) {
+    return loadedData[data.bubbleName].shapes.findIndex(
+      (obj) => obj.objName === data.objName
+    );
+  }
+
+  socket.on("change obj color", (data) => {
+    let idx = -1;
+    // console.log(data);
+    if(data.objType === 'Line2') {
+      idx = findLineIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+      loadedData[data.bubbleName].lines[idx].lineColor = data.color;
+    } else {
+      idx = findShapeIdxByObjName({bubbleName: data.bubbleName, objName: data.objName});
+      loadedData[data.bubbleName].shapes[idx].color = data.color;
+    }
+
+    socket.to(data.bubbleName).emit("change obj color", data);
+  });
+
   socket.on("delete obj", (data) => {
     // console.log(typeof loadedData[data.bubbleName]);
     // console.log(typeof loadedData[data.bubbleName].lines);
