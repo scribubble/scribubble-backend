@@ -135,6 +135,11 @@ io.on("connection", (socket) => {
           y: data.position.y,
           z: data.position.z,
         },
+        rotation: {
+          x: data.rotation.x,
+          y: data.rotation.y,
+          z: data.rotation.z,
+        },
         scale: {
           x: data.scale.x,
           y: data.scale.y,
@@ -196,18 +201,6 @@ io.on("connection", (socket) => {
     socket.to(data.bubbleName).emit("move obj", data);
   });
 
-  socket.on("scale obj", (data) => {
-    const result = findObjByObjName(data.bubbleName, data.objName);
-    
-    if(result.objType === 'lines') {
-      loadedData[data.bubbleName][result.objType][result.index].tfcScale = data.scale;
-    } else if(result.objType === 'shapes'){
-      loadedData[data.bubbleName][result.objType][result.index].scale = data.scale;
-    }
-
-    socket.to(data.bubbleName).emit("scale obj", data);
-  });
-
   socket.on("rotate obj", (data) => {
     const result = findObjByObjName(data.bubbleName, data.objName);
     
@@ -218,6 +211,18 @@ io.on("connection", (socket) => {
     }
 
     socket.to(data.bubbleName).emit("rotate obj", data);
+  });
+
+  socket.on("scale obj", (data) => {
+    const result = findObjByObjName(data.bubbleName, data.objName);
+    
+    if(result.objType === 'lines') {
+      loadedData[data.bubbleName][result.objType][result.index].tfcScale = data.scale;
+    } else if(result.objType === 'shapes'){
+      loadedData[data.bubbleName][result.objType][result.index].scale = data.scale;
+    }
+
+    socket.to(data.bubbleName).emit("scale obj", data);
   });
 
   socket.on("delete obj", (data) => {
