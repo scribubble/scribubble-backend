@@ -7,6 +7,8 @@ const vectorSchema = new Schema({
   z: { type: Number, default: 0 },
 });
 
+const Vec = mongoose.model("Vec", vectorSchema);
+
 const lineSchema = new Schema({
   drawer_id: { type: String, default: '' },
   linePositions: { type: [vectorSchema], default: [] },
@@ -43,4 +45,4 @@ const bubbleSchema = new Schema({
 
 const Bubble = mongoose.model("Bubble", bubbleSchema);
 
-module.exports = { Bubble, Line, Shape };
+module.exports = { Bubble, Line, Shape, Vec };

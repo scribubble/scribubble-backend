@@ -143,17 +143,15 @@ io
 
   /* Draw */
   socket.on("draw start", (data) => {
-    // console.log("draw start");
-    // console.log("draw start", data);
 
     let newLine = new Line({
       drawer_id: data.user_id,
       linePositions: [
-        {
+        new Vec({
           x: data.mousePos.x,
           y: data.mousePos.y,
           z: data.mousePos.z,
-        },
+        })
       ],
       lineColor: data.color,
       lineWidth: data.linewidth,
@@ -167,21 +165,21 @@ io
 
     loadedData[data.bubbleName].lines.push(newLine);
 
-    // console.log(`newLine ${newLine}`);
-    // console.log(`loadedData[${data.bubbleName}] ${loadedData[data.bubbleName]}`);
-
     io.emit("draw start", data);
     // socket.emit("draw start", data);
     // socket.to(data.bubbleName).emit("draw start", data);
   });
 
   socket.on("drawing", async (data) => {
-    // console.log("drawing");
-    // console.log("drawing", data);
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
-    // console.log(loadedData[data.bubbleName][result.objType][result.index]);
-    loadedData[data.bubbleName][result.objType][result.index].linePositions.push(data.mousePos);
+    const newVec = new Vec({
+      x: data.mousePos.x,
+      y: data.mousePos.y,
+      z: data.mousePos.z,
+    })
+
+    loadedData[data.bubbleName][result.objType][result.index].linePositions.push(newVec);
 
     io.emit("drawing", data);
     socket.emit("drawing", data);
@@ -189,14 +187,30 @@ io
   });
 
   socket.on("draw stop", async (data) => {
-    // console.log("draw stop", data);
-    // console.log(tempLineData[data.bubbleName]);
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
     if(result.objType === 'lines') {
-      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = data.tfcPosition;  
+      const newVec1 = new Vec({
+        x: data.tfcPosition.x,
+        y: data.tfcPosition.y,
+        z: data.tfcPosition.z,
+      });
+      const newVec2 = new Vec({
+        x: data.position.x,
+        y: data.position.y,
+        z: data.position.z,
+      });
+
+      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = newVec1;  
+      loadedData[data.bubbleName][result.objType][result.index].position = newVec2;
     } else if(result.objType === 'shapes') {
-      loadedData[data.bubbleName][result.objType][result.index].position = data.position;
+      const newVec1 = new Vec({
+        x: data.position.x,
+        y: data.position.y,
+        z: data.position.z,
+      });
+
+      loadedData[data.bubbleName][result.objType][result.index].position = newVec1;
     }
     
     io.emit("draw stop", data);
@@ -206,27 +220,25 @@ io
   });
 
   socket.on("create shape", (data) => {
-    // console.log("create  shape");
-
     let newShape = new Shape({
       shape: data.shape,
       color: data.color,
       objName: data.objName,
-      position: {
+      position: new Vec({
         x: data.position.x,
         y: data.position.y,
         z: data.position.z,
-      },
-      rotation: {
+      }),
+      rotation: new Vec({
         x: data.rotation.x,
         y: data.rotation.y,
         z: data.rotation.z,
-      },
-      scale: {
+      }),
+      scale: new Vec({
         x: data.scale.x,
         y: data.scale.y,
         z: data.scale.z,
-      },
+      }),
     });
 
     loadedData[data.bubbleName].shapes.push(newShape);
@@ -238,13 +250,24 @@ io
   });
 
   socket.on("move obj", async (data) => {
-    // console.log("move obj", data);
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
     if(result.objType === 'lines' && data.tfcPosition) {
-      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = data.tfcPosition;
+      const newVec = new Vec({
+        x: data.tfcPosition.x,
+        y: data.tfcPosition.y,
+        z: data.tfcPosition.z,
+      });
+
+      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = newVec;
     } else if(result.objType === 'shapes' && data.position){
-      loadedData[data.bubbleName][result.objType][result.index].position = data.position;
+      const newVec = new Vec({
+        x: data.position.x,
+        y: data.position.y,
+        z: data.position.z,
+      });
+
+      loadedData[data.bubbleName][result.objType][result.index].position = newVec;
     }
     
     socket.to(data.bubbleName).emit("move obj", data);
@@ -313,7 +336,7 @@ io
           .findOneAndUpdate(
             query,
             loadedData[roomArray[i]],
-            { overwrite: true }
+            { new: true, upsert: true,}
           )
           .then((savedBubble) => {
             console.log(`${roomArray[i]} is saved`);
@@ -331,7 +354,7 @@ io
 
 /* mongoose */
 const mongoose = require("mongoose");
-const { Bubble, Line, Shape } = require("./db/bubbleModel.js");
+const { Bubble, Line, Shape, Vec } = require("./db/bubbleModel.js");
 
 mongoose.connect(process.env.CONNECTIONSTRING).then(() => {
   server.listen(PORT, () => {
