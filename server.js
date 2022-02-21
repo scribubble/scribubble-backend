@@ -56,42 +56,50 @@ function findObjByObjName(bubbleName, objName) {
 
 function loadBubbleData(socket, param) {
   if (loadedData[param]) { // 요청한 버블이 메모리에 있는 경우
+    console.log(`${param} is in memory`);
+
     io.to(socket.id).emit("get saved bubble", loadedData[param]);
+    return;
   } else { // 요청한 버블이 메모리에 없는 경우
     console.log(`${param} is not in memory`);
 
     const query = { bubbleName: param };
 
     Bubble
-    .findOne(query)
+    .findOne(query).lean()
     .then((result) => { 
       if(result) { // DB에 있던 버블인 경우
-        console.log(1); 
+        console.log(`${param} is in DB`);
+
         loadedData[param] = result;
-        console.log(`loadedData[${param}] ${loadedData[param]}`); 
+
         if(loadedData[param].visitor_id.includes(socket.id) === false) {
           loadedData[param].visitor_id.push(socket.id);
         }
+
+        console.log(`loadedData[${param}] ${loadedData[param]}`); 
       } else { // 버블을 새로 만드는 경우
+        console.log(`${param} is not in DB`);
+        
+        const defaultBubble = require('./data/defaultBubble.json');
+        console.log(defaultBubble.lines);
         const newBubble = new Bubble(
-          {bubbleName: param, owner_id: socket.id, visitor_id: socket.id}
+          {bubbleName: defaultBubble.bubbleName, owner_id: defaultBubble.owner_id, visitor_id: socket.id, lines: defaultBubble.lines}
         );
         loadedData[param] = newBubble;
 
         console.log(`newBubble ${newBubble}`); 
         console.log(`loadedData[${param}] ${loadedData[param]}`); 
       }
+      io.to(socket.id).emit("get saved bubble", loadedData[param]);
     })
     .catch((err) => console.log(err));
   }
 }
 
+console.log('version 7');
+
 io
-.use((socket, next) => {
-  console.log('io middleware');
-  loadBubbleData(socket, 'room1');
-  next();
-})
 .on("connection", (socket) => {
   console.log(`CONNECT !!!! ${socket.id}`);
 
@@ -138,140 +146,74 @@ io
     // 방에 접속
     socket.join(param);
 
-    io.to(socket.id).emit("get saved bubble", loadedData[param]);
+    loadBubbleData(socket, param);
   });
 
   /* Draw */
   socket.on("draw start", (data) => {
-
-    let newLine = new Line({
+    loadedData[data.bubbleName].lines.push({
       drawer_id: data.user_id,
-      linePositions: [
-        new Vec({
-          x: data.mousePos.x,
-          y: data.mousePos.y,
-          z: data.mousePos.z,
-        })
-      ],
+      linePositions: [{ x: data.mousePos.x, y: data.mousePos.y, z: data.mousePos.z}],
       lineColor: data.color,
       lineWidth: data.linewidth,
       lineDashed: data.dashed,
       objName: data.objName,
-      position: { x: 0, y: 0, z: 0},
-      tfcPosition: { x: 0, y: 0, z: 0},
-      tfcScale: { x: 1, y: 1, z: 1},
-      tfcRotation: { x: 0, y: 0, z: 0}
+      position: { x: 0, y: 0, z: 0,},
+      tfcPosition: { x: 0, y: 0, z: 0,},
+      tfcScale: { x: 1, y: 1, z: 1,},
+      tfcRotation: { x: 0, y: 0, z: 0,}
     });
 
-    loadedData[data.bubbleName].lines.push(newLine);
-
-    io.emit("draw start", data);
-    // socket.emit("draw start", data);
-    // socket.to(data.bubbleName).emit("draw start", data);
+    io.to(data.bubbleName).emit("draw start", data);
   });
 
   socket.on("drawing", async (data) => {
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
-    const newVec = new Vec({
+    loadedData[data.bubbleName][result.objType][result.index].linePositions.push({
       x: data.mousePos.x,
       y: data.mousePos.y,
       z: data.mousePos.z,
-    })
+    });
 
-    loadedData[data.bubbleName][result.objType][result.index].linePositions.push(newVec);
-
-    io.emit("drawing", data);
-    socket.emit("drawing", data);
-    // socket.to(data.bubbleName).emit("drawing", data);
+    io.to(data.bubbleName).emit("drawing", data);
   });
 
   socket.on("draw stop", async (data) => {
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
     if(result.objType === 'lines') {
-      const newVec1 = new Vec({
-        x: data.tfcPosition.x,
-        y: data.tfcPosition.y,
-        z: data.tfcPosition.z,
-      });
-      const newVec2 = new Vec({
-        x: data.position.x,
-        y: data.position.y,
-        z: data.position.z,
-      });
-
-      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = newVec1;  
-      loadedData[data.bubbleName][result.objType][result.index].position = newVec2;
-    } else if(result.objType === 'shapes') {
-      const newVec1 = new Vec({
-        x: data.position.x,
-        y: data.position.y,
-        z: data.position.z,
-      });
-
-      loadedData[data.bubbleName][result.objType][result.index].position = newVec1;
+      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = data.tfcPosition;
+      loadedData[data.bubbleName][result.objType][result.index].position = data.position;
     }
     
-    io.emit("draw stop", data);
-    // io.in(data.bubbleName).emit("draw stop", data); 
-    // socket.emit("draw stop", data);
-    // socket.to(data.bubbleName).emit("draw stop", data);
+    io.to(data.bubbleName).emit("draw stop", data);
   });
 
   socket.on("create shape", (data) => {
-    let newShape = new Shape({
+
+    loadedData[data.bubbleName].shapes.push({
       shape: data.shape,
       color: data.color,
       objName: data.objName,
-      position: new Vec({
-        x: data.position.x,
-        y: data.position.y,
-        z: data.position.z,
-      }),
-      rotation: new Vec({
-        x: data.rotation.x,
-        y: data.rotation.y,
-        z: data.rotation.z,
-      }),
-      scale: new Vec({
-        x: data.scale.x,
-        y: data.scale.y,
-        z: data.scale.z,
-      }),
+      position: { x: data.position.x, y: data.position.y, z: data.position.z },
+      rotation: { x: data.rotation.x, y: data.rotation.y, z: data.rotation.z },
+      scale: { x: data.scale.x, y: data.scale.y, z: data.scale.z },
     });
 
-    loadedData[data.bubbleName].shapes.push(newShape);
-
     socket.to(data.bubbleName).emit("create shape", data);
-
-    // console.log(`new Shape ${newShape}`);
-    // console.log(`loadedData[data.bubbleName] ${loadedData[data.bubbleName]}`);
   });
 
   socket.on("move obj", async (data) => {
     let result = await findObjByObjName(data.bubbleName, data.objName);
 
     if(result.objType === 'lines' && data.tfcPosition) {
-      const newVec = new Vec({
-        x: data.tfcPosition.x,
-        y: data.tfcPosition.y,
-        z: data.tfcPosition.z,
-      });
-
-      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = newVec;
+      loadedData[data.bubbleName][result.objType][result.index].tfcPosition = data.tfcPosition;
     } else if(result.objType === 'shapes' && data.position){
-      const newVec = new Vec({
-        x: data.position.x,
-        y: data.position.y,
-        z: data.position.z,
-      });
-
-      loadedData[data.bubbleName][result.objType][result.index].position = newVec;
+      loadedData[data.bubbleName][result.objType][result.index].position = data.position;
     }
     
     socket.to(data.bubbleName).emit("move obj", data);
-    // console.log(`loadedData[${data.bubbleName}][${result.objType}][${result.index}] ${loadedData[data.bubbleName][result.objType][result.index]}`);
   });
 
   socket.on("rotate obj", async (data) => {
@@ -326,10 +268,10 @@ io
 
       let roomArray = Array.from(socket.rooms);
       console.log(`${socket.id} is disconnecting from ${roomArray}`);
-      // console.log(roomArray);
+      
       for (let i = 1; i < roomArray.length; i++) {
         let clientCount = io.sockets.adapter.rooms.get(roomArray[i]).size;
-        // console.log(clientCount);
+        
         if (clientCount === 1 && loadedData[roomArray[i]]) {
           let query = { bubbleName: roomArray[i] };
           Bubble
@@ -354,7 +296,7 @@ io
 
 /* mongoose */
 const mongoose = require("mongoose");
-const { Bubble, Line, Shape, Vec } = require("./db/bubbleModel.js");
+const { Bubble, Line, Shape, Vector } = require("./db/models");
 
 mongoose.connect(process.env.CONNECTIONSTRING).then(() => {
   server.listen(PORT, () => {
@@ -371,6 +313,6 @@ rule.hour = 0;
 const job = schedule.scheduleJob(rule, function () {
   Bubble.deleteMany({}, () => {
     loadedData = [];
-    console.log("collection removed");
+    console.log("All data has removed");
   });
 });
