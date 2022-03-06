@@ -1,12 +1,20 @@
 const express = require("express");
-const app = express();
-
-const http = require("http");
-const server = http.createServer(app);
+const http = require('http');
+const path = require("path");
+const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 4000;
 
-const io = require("socket.io")(server, {
+const app = express();
+
+const opts = {
+  requestCert: false,
+  rejectUnauthorized: false
+}
+
+const server = http.createServer(opts, app);
+
+const io = new Server(server, {
   cors: {
     origin: "*",
     credentials: true,
@@ -97,7 +105,7 @@ function loadBubbleData(socket, param) {
   }
 }
 
-console.log('version 7');
+console.log('version 8');
 
 io
 .on("connection", (socket) => {
@@ -298,7 +306,9 @@ io
 const mongoose = require("mongoose");
 const { Bubble, Line, Shape, Vector } = require("./db/models");
 
-mongoose.connect(process.env.CONNECTIONSTRING).then(() => {
+const DB_URL = process.env.CONNECTIONSTRING || 'mongodb://localhost:27017';
+
+mongoose.connect(DB_URL).then(() => {
   server.listen(PORT, () => {
     console.log(`Connected at ${PORT}`);
   });
