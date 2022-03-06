@@ -307,10 +307,7 @@ mongoose.connect(process.env.CONNECTIONSTRING).then(() => {
 /* node-schedule */
 const schedule = require("node-schedule");
 
-const rule = new schedule.RecurrenceRule();
-rule.hour = 0;
-
-const job = schedule.scheduleJob(rule, function () {
+const job = schedule.scheduleJob('00 00 00 * * 0-6', function () {
   Bubble.deleteMany({}, () => {
     loadedData = [];
     console.log("All data has removed");
