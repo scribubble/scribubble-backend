@@ -77,19 +77,19 @@ function loadBubbleData(socket, param) {
           loadedData[param].visitor_id.push(socket.id);
         }
 
-        console.log(`loadedData[${param}] ${loadedData[param]}`); 
+        // console.log(`loadedData[${param}] ${loadedData[param]}`); 
       } else { // 버블을 새로 만드는 경우
         console.log(`${param} is not in DB`);
         
         const defaultBubble = require('./data/defaultBubble.json');
-        console.log(defaultBubble.lines);
+        // console.log(defaultBubble.lines);
         const newBubble = new Bubble(
           {bubbleName: defaultBubble.bubbleName, owner_id: defaultBubble.owner_id, visitor_id: socket.id, lines: defaultBubble.lines}
         );
         loadedData[param] = newBubble;
 
-        console.log(`newBubble ${newBubble}`); 
-        console.log(`loadedData[${param}] ${loadedData[param]}`); 
+        // console.log(`newBubble ${newBubble}`); 
+        // console.log(`loadedData[${param}] ${loadedData[param]}`); 
       }
       io.to(socket.id).emit("get saved bubble", loadedData[param]);
     })
