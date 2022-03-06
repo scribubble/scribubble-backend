@@ -304,7 +304,7 @@ io
 
 /* mongoose */
 const mongoose = require("mongoose");
-const { Bubble, Line, Shape, Vector } = require("./db/models");
+const { Bubble } = require("./db/models");
 
 const DB_URL = process.env.CONNECTIONSTRING || 'mongodb://localhost:27017';
 
