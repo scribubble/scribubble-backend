@@ -16,9 +16,10 @@ const server = http.createServer(opts, app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    credentials: true,
-  },
+    origin: ["https://localhost:8888", "https://scribubble.com", "http://scribubble.com", "http://scribubble.s3-website.ap-northeast-2.amazonaws.com", "https://d1bsmwli3pnvxm.cloudfront.net"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  }
 });
 
 let loadedData = [];
