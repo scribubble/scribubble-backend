@@ -2,8 +2,8 @@ const { Bubble } = require("../db");
 
 module.exports = (io) => {
   const handleDisconnect = async function (payload) {
-    const socket = this;
     try {
+      const socket = this;
       io.emit("user exit", {
         user_id: socket.id,
         user_nickname: socket.user_nickname,
