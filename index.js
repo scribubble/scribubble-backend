@@ -26,7 +26,7 @@ const {
 const { handleDisconnect } = require("./src/handlers/connectionHandler")(io);
 
 let loadedData = [];
-global.loadedData = loadedData;
+global.loadedData = loadedData; // global.전역변수명 = 변수명; -> 전역변수로 설정
 
 const { adjective, animal } = require("./src/services/nameService");
 
