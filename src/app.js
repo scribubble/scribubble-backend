@@ -25,10 +25,10 @@ const {
 } = require("./handlers/scribbleHandler")(io);
 const { handleDisconnect } = require("./handlers/connectionHandler")(io);
 
+const { nickNameService } = require("./services/nickNameService");
+
 let loadedData = [];
 global.loadedData = loadedData; // global.전역변수명 = 변수명; -> 전역변수로 설정
-
-const { nickNameService } = require("./services/nameService");
 
 console.log("version 9");
 
