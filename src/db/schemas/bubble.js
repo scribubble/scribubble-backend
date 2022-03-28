@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const { Schema, model } = require("mongoose");
 
 const vector0Schema = new Schema({
   x: { type: Number, default: 0 },
@@ -43,4 +42,6 @@ const bubbleSchema = new Schema({
   shapes: [ shapeSchema ],
 });
 
-module.exports = { bubbleSchema, lineSchema, shapeSchema, vector0Schema, vector1Schema };
+const BubbleModel = model("Bubble", bubbleSchema);
+
+module.exports = { BubbleModel };
