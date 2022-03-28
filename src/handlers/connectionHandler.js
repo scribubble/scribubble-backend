@@ -10,9 +10,9 @@ module.exports = (io) => {
       });
 
       let roomArr = Array.from(socket.rooms);
-      console.log(`${socket.id} is disconnecting from ${roomArr}`);
 
       for (let i = 1; i < roomArr.length; i++) {
+        console.log(`${socket.user_nickname} is disconnecting from ${roomArr[i]}`);
         let clientCount = io.sockets.adapter.rooms.get(roomArr[i]).size;
 
         if (clientCount === 1 && loadedData[roomArr[i]]) {
