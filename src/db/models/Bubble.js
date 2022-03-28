@@ -19,6 +19,10 @@ class Bubble {
       }
     );
   }
+
+  static deleteAll() {
+    return BubbleModel.deleteMany({});
+  }
 }
 
 module.exports = { Bubble };

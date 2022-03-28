@@ -26,6 +26,7 @@ const {
 const { handleDisconnect } = require("./handlers/connectionHandler")(io);
 
 const { nickNameService } = require("./services/nickNameService");
+const { resetService } = require("./services/resetService");
 
 let loadedData = [];
 global.loadedData = loadedData; // global.전역변수명 = 변수명; -> 전역변수로 설정
@@ -81,5 +82,9 @@ const onConnection = (socket) => {
 };
 
 io.on("connection", onConnection);
+
+/* node-schedule */
+const schedule = require("node-schedule");
+const job = schedule.scheduleJob("00 00 00 * * 0-6", resetService.reset);
 
 module.exports = { httpServer };
