@@ -6,10 +6,13 @@ module.exports = (io) => {
     try {
       const socket = this;
 
+      // 방에 접속
+      socket.join(bubblename);
+
       // 방에 접속하고 있는 인원들에 대한 목록을 보내줌
       const uList = io.sockets.adapter.rooms.get(bubblename);
       if (uList) {
-        socket.emit("user list", {
+        io.to(bubblename).emit("user list", {
           userList: Array.from(uList).map((sID) => {
             const so = io.sockets.sockets.get(sID);
             return {
@@ -19,9 +22,6 @@ module.exports = (io) => {
           }),
         });
       }
-
-      // 방에 접속
-      socket.join(bubblename);
 
       /* 버블 데이터 전송 */
       if (loadedData[bubblename]) {

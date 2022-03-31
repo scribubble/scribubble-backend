@@ -37,24 +37,17 @@ const onConnection = (socket) => {
   // ========================================
   console.log(`CONNECT !!!! ${socket.id}`);
 
-  // 새로운 버블로 이동 (사용자가 버블을 생성하고 이동 할 수 있을 경우 사용)
+  /*  Move to a new bubble (use when the user can create and move a bubble)  */
   // socket.on('join room', (previousRoom, newRoom) => {
   //   socket.leave(previousRoom);
   //   socket.join(newRoom);
   //   socket.emit('room changed', newRoom);
   // });
 
-  // 접속하면 socketId를 저장하게함
-  // 랜덤 유저 이름 제작
+  // Create random user name
   socket.user_nickname = nickNameService.createNickname();
 
   socket.emit("user_id", {
-    user_id: socket.id,
-    user_nickname: socket.user_nickname,
-  });
-
-  // 내가 접속함을 알림
-  io.emit("user enter", {
     user_id: socket.id,
     user_nickname: socket.user_nickname,
   });
