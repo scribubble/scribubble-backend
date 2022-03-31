@@ -24,6 +24,10 @@ function findObjByObjName(bubbleName, objName) {
   });
 }
 
+function isLineDrawingEnd(line) {
+  return line.tfcPosition.x !== line.position.x;
+}
+
 module.exports = (io) => {
   const handleDrawStart = function (payload) {
     try {
@@ -57,13 +61,16 @@ module.exports = (io) => {
     try {
       let result = await findObjByObjName(payload.bubbleName, payload.objName);
 
-      loadedData[payload.bubbleName][result.objType][
-        result.index
-      ].linePositions.push({
-        x: payload.mousePos.x,
-        y: payload.mousePos.y,
-        z: payload.mousePos.z,
-      });
+      // If drawing end, ignores incoming data.
+      if (!isLineDrawingEnd(loadedData[payload.bubbleName][result.objType][result.index])) {
+        loadedData[payload.bubbleName][result.objType][
+          result.index
+        ].linePositions.push({
+          x: payload.mousePos.x,
+          y: payload.mousePos.y,
+          z: payload.mousePos.z,
+        });
+      }
 
       io.to(payload.bubbleName).emit("drawing", payload);
     } catch (error) {
